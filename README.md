@@ -48,7 +48,7 @@ curl --request POST \
 ```
 4. Refresh Grafana
 
-## Destory
+## Destroy
 
 ```
 $ docker-compose stop
@@ -72,4 +72,4 @@ The Probe service will persist the list of sites to monitor to a flat JSON file 
   - MVC pattern with Router
 - Adequate datastore 
 - Terraform / Kubernetes
-- Swagger. Implement a swagger library to provide an API documentation endpoint
+- Implement a swagger library to provide an API documentation endpoint
