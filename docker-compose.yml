@@ -1,0 +1,28 @@
+version: "3.7"
+
+services:
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ${PWD}/config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  probe:
+    build: ${PWD}
+    container_name: probe
+    ports:
+      - "8080:8080"
+    volumes:
+      - ${PWD}/config/probe/sites.json:/home/config/probe/sites.json
+    
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ${PWD}/config/grafana/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yaml
+      - ${PWD}/config/grafana/dashboard.yml:/etc/grafana/provisioning/dashboards/dashboard.yaml
+      - ${PWD}/config/grafana/probe_dashboard.json:/etc/grafana/provisioning/dashboards/probe_dashboard.json
