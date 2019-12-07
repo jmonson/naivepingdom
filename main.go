@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -82,54 +81,61 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
 //siteAPI is restful endpoint for listing and adding new sites
 func siteAPI(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	switch r.Method {
 	case "GET":
-		output := "{"
+		name := r.URL.Query().Get("name")
+		var foundSite Site
 		for _, site := range sites {
-			output += fmt.Sprintf("\"%v\":\"%v\",", site.Name, site.Address)
+			if site.Name == name {
+				foundSite = site
+			}
 		}
-		output = strings.TrimRight(output, ",") + "}"
-		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(output))
+		if (foundSite == Site{}) {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		json.NewEncoder(w).Encode(foundSite)
 	case "POST":
 		decoder := json.NewDecoder(r.Body)
 		var newSite Site
-		err := decoder.Decode(&newSite)
-		if err != nil {
-			http.Error(w, err.Error(), 500)
-			return
-		}
+		decoder.Decode(&newSite)
 		sites = append(sites, newSite)
-		saveSites()
-		resetExporter()
 		w.WriteHeader(http.StatusNoContent)
-		w.Header().Set("Content-Type", "application/json")
 	case "DELETE":
-		decoder := json.NewDecoder(r.Body)
-		var removeSite Site
-		err := decoder.Decode(&removeSite)
-		if err != nil {
-			http.Error(w, err.Error(), 500)
-			return
-		}
-		var removeIndex int
+		name := r.URL.Query().Get("name")
+		removeSiteIndex := -1
 		for i, site := range sites {
-			if site.Name == removeSite.Name {
-				removeIndex = i
-				break
+			if site.Name == name {
+				removeSiteIndex = i
 			}
 		}
-		sites = sites[:removeIndex+copy(sites[removeIndex:], sites[removeIndex+1:])]
-		saveSites()
-		resetExporter()
+		if removeSiteIndex == -1 {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		sites = sites[:removeSiteIndex+copy(sites[removeSiteIndex:], sites[removeSiteIndex+1:])]
 		w.WriteHeader(http.StatusNoContent)
-		w.Header().Set("Content-Type", "application/json")
+	case "PUT":
+		decoder := json.NewDecoder(r.Body)
+		var updateSite Site
+		decoder.Decode(&updateSite)
+		for i, site := range sites {
+			if site.Name == updateSite.Name {
+				sites[i].Address = updateSite.Address
+			}
+		}
+		if (updateSite == Site{}) {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte("{\"message\":\"Method not supported\"}"))
 	}
+	saveSites()
+	resetExporter()
 }
 
 //saveSites persists Site information to flat file datastore

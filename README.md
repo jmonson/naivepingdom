@@ -46,7 +46,73 @@ curl --request POST \
   --header 'content-type: application/json' \
   --data '{"name":"twitter","address":"https://twitter.com"}'
 ```
+
 4. Refresh Grafana
+
+### Additionally, the API supports the following methods:
+
+* GET
+
+Request:
+```
+curl --request GET \
+  --url http://localhost:8080/api/site?name=armis
+```
+Response:
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+Date: Sat, 07 Dec 2019 16:58:54 GMT
+Content-Length: 50
+
+{"name":"armis","address":"http://www.armis.com"}
+```
+
+* POST
+
+Request:
+```
+curl --request POST \
+  --url http://localhost:8080/api/site \
+  --header 'content-type: application/json' \
+  --data '{"name":"twitter","address":"https://twitter.com"}'
+```
+Response:
+```
+HTTP/1.1 204 No Content
+Content-Type: application/json
+Date: Sat, 07 Dec 2019 17:00:24 GMT
+```
+
+* PUT
+
+Request:
+```
+curl --request PUT \
+  --url 'http://localhost:8080/api/site?name=twitter' \
+  --header 'content-type: application/json' \
+  --data '{"name":"twitter","address":"https://twitter.com"}'
+```
+Response
+```
+HTTP/1.1 204 No Content
+Content-Type: application/json
+Date: Sat, 07 Dec 2019 17:00:24 GMT
+```
+
+* DELETE
+
+Request:
+```
+curl --request DELETE \
+  --url 'http://localhost:8080/api/site?name=twitter'
+```
+Response:
+```
+HTTP/1.1 204 No Content
+Content-Type: application/json
+Date: Sat, 07 Dec 2019 17:00:24 GMT
+```
 
 ## Destroy
 
@@ -66,6 +132,7 @@ The Probe service will persist the list of sites to monitor to a flat JSON file 
 ## Future Enhancements
 
 - Test Driven Development! Normally, I would have built unit tests prior to coding. However, I skipped this important step in the interest of saving time.
+- Error handling. The probe really only supports the happy-path use case and does not properly handle errors.
 - HTTP Tracing for more accurate response times. My response duration is more of an estimate. A better measure would have utilized the [httptrace](https://golang.org/pkg/net/http/httptrace/) package to understand true response times.
 - Production HTTP service:
   - Security / Authentication
